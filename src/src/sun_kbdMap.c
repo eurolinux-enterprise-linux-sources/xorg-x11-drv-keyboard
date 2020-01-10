@@ -25,6 +25,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include <X11/Xfuncproto.h>
 #include <X11/Sunkeysym.h>
 #include "atKeynames.h"
@@ -36,9 +37,16 @@
 
 /* Map the Solaris keycodes to the "XFree86" keycodes. */
 
-/* Additional Sun Japanese Keyboard Keys not defined in atKeynames.h */
-#define KEY_Kanji	0x82
-#define KEY_Execute	0x83
+/*
+ * Additional Korean 106 Keyboard Keys not defined in atKeynames.h
+ * These are exactly same USB usage id with Kana(0x90) and Eisu(0x91) keys
+ * in Mac Japanese keyboard. From /usr/X11/lib/X11/xkb/keycodes/xfree86, these
+ * are 209 and 210. So these should be 0xc9(209-8=201) and 0xca(210-8=202).
+ *   <EISU> =   210;          // Alphanumeric mode on macintosh
+ *   <KANA> =   209;          // Kana mode on macintosh
+ */
+#define KEY_Hangul            0xC9    /* Also Kana in Mac Japanaese kbd */
+#define KEY_Hangul_Hanja      0xCA    /* Also Eisu in Mac Japanaese kbd */
 
 /* Override atKeynames.h values with unique keycodes, so we can distinguish
    KEY_F15 from KEY_HKTG & KEY_KP_DEC from KEY_BSlash2 */
@@ -467,16 +475,16 @@ static unsigned char usbmap[256] = {
 	/* 133 */ KEY_NOTUSED,
 	/* 134 */ KEY_NOTUSED,
 	/* 135 */ KEY_BSlash2,	/* Sun Japanese Kbd: Backslash / Underscore */
-	/* 136 */ KEY_XFER,	/* Sun Japanese Kbd: Henkan Mode */
+	/* 136 */ KEY_HKTG,	/* Sun Japanese type7 Kbd: Hirugana/Katakana */
 	/* 137 */ KEY_Yen,	/* Sun Japanese Kbd: Yen / Brokenbar */
-	/* 138 */ KEY_Kanji,	/* Sun Japanese Kbd: Kanji */
-	/* 139 */ KEY_Execute,	/* Sun Japanese Kbd: Execute */
+	/* 138 */ KEY_XFER,	/* Sun Japanese Kbd: Kanji Transfer */
+	/* 139 */ KEY_NFER,	/* Sun Japanese Kbd: No Kanji Transfer */
 	/* 140 */ KEY_NOTUSED,
 	/* 141 */ KEY_NOTUSED,
 	/* 142 */ KEY_NOTUSED,
 	/* 143 */ KEY_NOTUSED,
-	/* 144 */ KEY_NOTUSED,
-	/* 145 */ KEY_NOTUSED,
+	/* 144 */ KEY_Hangul,		/* Korean 106 Kbd: Hangul */
+	/* 145 */ KEY_Hangul_Hanja,	/* Korean 106 Kbd: Hanja */
 	/* 146 */ KEY_NOTUSED,
 	/* 147 */ KEY_NOTUSED,
 	/* 148 */ KEY_NOTUSED,
@@ -592,8 +600,6 @@ KbdGetMapping (InputInfoPtr pInfo, KeySymsPtr pKeySyms, CARD8 *pModMap)
      * Add Sun keyboard keysyms to default map
      */
 #define map_for_key(k,c) 	map[(k * GLYPHS_PER_KEY) + c]   
-    map_for_key(KEY_Kanji,	0) = XK_Kanji;
-    map_for_key(KEY_Execute,	0) = XK_Execute;
     map_for_key(KEY_Power,	0) = SunXK_PowerSwitch;
     map_for_key(KEY_Power,	1) = SunXK_PowerSwitchShift;
     map_for_key(KEY_Mute,	0) = SunXK_AudioMute;

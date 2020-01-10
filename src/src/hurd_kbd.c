@@ -20,13 +20,12 @@
  * PERFORMANCE OF THIS SOFTWARE.
  *
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/hurd/hurd_io.c,v 1.8 2002/10/11 01:40:35 dawes Exp $ */
 
-#define NEED_EVENTS
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
+#include <xorg-server.h>
 #include <X11/X.h>
 
 #include "compiler.h"
@@ -96,12 +95,6 @@ GetKbdLeds(InputInfoPtr pInfo)
     return 0;
 }
 
-static void 
-SetKbdRepeat(InputInfoPtr pInfo, char rad)
-{
-    return;
-}
-
 static void
 KbdGetMapping(InputInfoPtr pInfo, KeySymsPtr pKeySyms, CARD8 *pModMap)
 {
@@ -162,12 +155,9 @@ xf86OSKbdPreInit(InputInfoPtr pInfo)
     pKbd->Bell          = SoundKbdBell;
     pKbd->SetLeds       = SetKbdLeds;
     pKbd->GetLeds       = GetKbdLeds;
-    pKbd->SetKbdRepeat  = SetKbdRepeat;
     pKbd->KbdGetMapping = KbdGetMapping;
     pKbd->RemapScanCode = ATScancode;
     pKbd->OpenKeyboard  = OpenKeyboard;
-    pKbd->vtSwitchSupported = FALSE;
-    pKbd->CustomKeycodes = FALSE;
     pKbd->private       = NULL;
     pInfo->read_input   = ReadInput;
     return TRUE;

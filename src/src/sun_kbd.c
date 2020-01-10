@@ -22,38 +22,34 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* Copyright 2004-2009 Sun Microsystems, Inc.  All rights reserved.
+/*
+ * Copyright (c) 2004-2009, Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, and/or sell copies of the Software, and to permit persons
- * to whom the Software is furnished to do so, provided that the above
- * copyright notice(s) and this permission notice appear in all copies of
- * the Software and that both the above copyright notice(s) and this
- * permission notice appear in supporting documentation.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
- * OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
- * HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
- * INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
- * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
- * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- * 
- * Except as contained in this notice, the name of a copyright holder
- * shall not be used in advertising or otherwise to promote the sale, use
- * or other dealings in this Software without prior written authorization
- * of the copyright holder.
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include "xf86.h"
 #include "xf86Priv.h"
 #include "xf86_OSlib.h"
@@ -413,13 +409,6 @@ GetKbdLeds(InputInfoPtr pInfo)
     return leds;
 }
 
-/* ARGSUSED0 */
-static void
-SetKbdRepeat(InputInfoPtr pInfo, char rad)
-{
-    /* Nothing to do */
-}
-
 static void
 CloseKeyboard(InputInfoPtr pInfo)
 {
@@ -493,35 +482,23 @@ ReadInput(InputInfoPtr pInfo)
 static Bool
 OpenKeyboard(InputInfoPtr pInfo)
 {
-    const char *kbdPath = NULL;
-    const char *defaultKbd = "/dev/kbd";
-
-    if (pInfo->options != NULL) {
-	kbdPath = xf86SetStrOption(pInfo->options, "Device", NULL);
-    }
-    if (kbdPath == NULL) {
-        kbdPath = defaultKbd;
-    }
+    char *kbdPath = xf86SetStrOption(pInfo->options, "Device", "/dev/kbd");
+    Bool ret;
 
     pInfo->fd = open(kbdPath, O_RDONLY | O_NONBLOCK);
     
     if (pInfo->fd == -1) {
-        xf86Msg(X_ERROR, "%s: cannot open \"%s\"\n", pInfo->name, kbdPath);
+	xf86Msg(X_ERROR, "%s: cannot open \"%s\"\n", pInfo->name, kbdPath);
+	ret = FALSE;
     } else {
 	xf86MsgVerb(X_INFO, 3, "%s: Opened device \"%s\"\n", pInfo->name,
 		    kbdPath);
-    }
-    
-    if ((kbdPath != NULL) && (kbdPath != defaultKbd)) {
-	xfree(kbdPath);
+	pInfo->read_input = ReadInput;
+	ret = TRUE;
     }
 
-    if (pInfo->fd == -1) {
-	return FALSE;
-    } else {
-	pInfo->read_input = ReadInput;
-	return TRUE;
-    }
+    free(kbdPath);
+    return ret;
 }
 
 _X_EXPORT Bool
@@ -535,17 +512,13 @@ xf86OSKbdPreInit(InputInfoPtr pInfo)
     pKbd->Bell          = SoundKbdBell;
     pKbd->SetLeds       = SetKbdLeds;
     pKbd->GetLeds       = GetKbdLeds;
-    pKbd->SetKbdRepeat  = SetKbdRepeat;
     pKbd->KbdGetMapping = KbdGetMapping;
 
     pKbd->RemapScanCode = NULL;
 
     pKbd->OpenKeyboard = OpenKeyboard;
 
-    pKbd->vtSwitchSupported = FALSE;
-    pKbd->CustomKeycodes = FALSE;
-
-    pKbd->private = xcalloc(sizeof(sunKbdPrivRec), 1);
+    pKbd->private = calloc(sizeof(sunKbdPrivRec), 1);
     if (pKbd->private == NULL) {
        xf86Msg(X_ERROR,"can't allocate keyboard OS private data\n");
        return FALSE;

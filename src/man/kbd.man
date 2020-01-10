@@ -1,5 +1,3 @@
-.\" $XdotOrg: $
-.\" $XFree86: xc/programs/Xserver/hw/xfree86/input/keyboard/keyboard.man,v 1.2 2001/01/27 18:20:57 dawes Exp $ 
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 .TH KBD __drivermansuffix__ __vendorversion__
@@ -24,13 +22,13 @@ driver formerly included in __xservername__.
 .PP
 The
 .B kbd
-driver functions as a keyboard input device, and may be used as the
-X server's core keyboard.
+driver functions as a keyboard input device.
 .SH CONFIGURATION DETAILS
 .PP
 Depending on the X server version in use, input device options may be set
-in either a __xconfigfile__ file, or in the configuration files read by the
-Hardware Abstraction Layer (HAL) daemon, hald(1).
+in either a __xconfigfile__ file, an xorg.conf.d snippet, or in the
+configuration files read by the Hardware Abstraction Layer (HAL) daemon,
+hald(1).
 .PP
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details and for options that can be used with all input drivers.  This
@@ -92,16 +90,13 @@ enhance the keyboard layout details.  Default: not set.
 .BI "Option \*qXkbOptions\*q \*q" options \*q
 specifies the XKB keyboard option components.  These can be used to
 enhance the keyboard behaviour.  Default: not set.
-.PP
-Some other XKB-related options are available, but they are incompatible
-with the ones listed above and are not recommended, so they are not
-documented here.
 .SH EXAMPLE
 The following xorg.conf fragment ensures that user will be able to switch between
 .I us
 and
 .I sk
-layouts by pressing the "menu" key.
+layouts by pressing the "menu" key. The scroll lock LED shows which layout
+is currently active.
 .PP
 The
 .B XkbVariant

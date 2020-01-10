@@ -18,8 +18,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-  
-#define NEED_EVENTS
+#include <xorg-server.h>
+
 #include <X11/X.h>
 #include <X11/Xproto.h>
 
@@ -49,14 +49,17 @@
 /* Used to know when the first DEVICE_ON after a DEVICE_INIT is called */
 #define INITFLAG	(1U << 31)
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 static InputInfoPtr KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags);
+#else
+static int KbdPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
+#endif
 static int KbdProc(DeviceIntPtr device, int what);
 static void KbdCtrl(DeviceIntPtr device, KeybdCtrl *ctrl);
 static void KbdBell(int percent, DeviceIntPtr dev, pointer ctrl, int unused);
 static void PostKbdEvent(InputInfoPtr pInfo, unsigned int key, Bool down);
 
 static void InitKBD(InputInfoPtr pInfo, Bool init);
-static void SetXkbOption(InputInfoPtr pInfo, char *name, char **option);
 static void UpdateLeds(InputInfoPtr pInfo);
 
 _X_EXPORT InputDriverRec KBD = {
@@ -65,8 +68,7 @@ _X_EXPORT InputDriverRec KBD = {
 	NULL,
 	KbdPreInit,
 	NULL,
-	NULL,
-	0
+	NULL
 };
 
 _X_EXPORT InputDriverRec KEYBOARD = {
@@ -75,69 +77,22 @@ _X_EXPORT InputDriverRec KEYBOARD = {
 	NULL,
 	KbdPreInit,
 	NULL,
-	NULL,
-	0
-};
-
-typedef enum {
-    OPTION_ALWAYS_CORE,
-    OPTION_SEND_CORE_EVENTS,
-    OPTION_CORE_KEYBOARD,
-    OPTION_DEVICE,
-    OPTION_PROTOCOL,
-    OPTION_AUTOREPEAT,
-    OPTION_XLEDS,
-    OPTION_XKB_RULES,
-    OPTION_XKB_MODEL,
-    OPTION_XKB_LAYOUT,
-    OPTION_XKB_VARIANT,
-    OPTION_XKB_OPTIONS,
-    OPTION_CUSTOM_KEYCODES
-} KeyboardOpts;
-
-/* These aren't actually used ... */
-static const OptionInfoRec KeyboardOptions[] = {
-    { OPTION_ALWAYS_CORE,	"AlwaysCore",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_SEND_CORE_EVENTS,	"SendCoreEvents", OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_CORE_KEYBOARD,	"CoreKeyboard",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_DEVICE,		"Device",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_PROTOCOL,		"Protocol",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_AUTOREPEAT,	"AutoRepeat",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XLEDS,		"XLeds",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_RULES,		"XkbRules",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_MODEL,		"XkbModel",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_LAYOUT,	"XkbLayout",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_VARIANT,	"XkbVariant",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_OPTIONS,	"XkbOptions",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_CUSTOM_KEYCODES,   "CustomKeycodes", OPTV_BOOLEAN,	{0}, FALSE },
-    { -1,			NULL,		  OPTV_NONE,	{0}, FALSE }
+	NULL
 };
 
 static const char *kbdDefaults[] = {
-#ifdef XQUEUE 
-    "Protocol",		"Xqueue",
-#else
     "Protocol",		"standard",
-#endif
-    "AutoRepeat",	"500 30",
     "XkbRules",		"base",
     "XkbModel",		"pc105",
     "XkbLayout",	"us",
-    "CustomKeycodes",	"off",
     NULL
 };
 
 static const char *kbd98Defaults[] = {
-#ifdef XQUEUE
-    "Protocol",		"Xqueue",
-#else
     "Protocol",		"standard",
-#endif
-    "AutoRepeat",	"500 30",
     "XkbRules",		"xfree98",
     "XkbModel",		"pc98",
     "XkbLayout",	"jp",
-    "CustomKeycodes",	"off",
     NULL
 };
 
@@ -147,37 +102,51 @@ static char *xkb_layout;
 static char *xkb_variant;
 static char *xkb_options;
 
-static void
-SetXkbOption(InputInfoPtr pInfo, char *name, char **option)
-{
-   char *s;
-
-   if ((s = xf86SetStrOption(pInfo->options, name, NULL))) {
-       if (!s[0]) {
-           xfree(s);
-           *option = NULL;
-       } else {
-           *option = s;
-           xf86Msg(X_CONFIG, "%s: %s: \"%s\"\n", pInfo->name, name, s);
-       }
-    }
-}
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+static int
+NewKbdPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
 
 static InputInfoPtr
 KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 {
     InputInfoPtr pInfo;
-    KbdDevPtr pKbd;
-    MessageType from = X_DEFAULT;
-    char *s;
 
     if (!(pInfo = xf86AllocateInput(drv, 0)))
 	return NULL;
 
-    /* Initialise the InputInfoRec. */
     pInfo->name = dev->identifier;
-    pInfo->type_name = XI_KEYBOARD;
     pInfo->flags = XI86_KEYBOARD_CAPABLE;
+    pInfo->conversion_proc = NULL;
+    pInfo->reverse_conversion_proc = NULL;
+    pInfo->private_flags = 0;
+    pInfo->always_core_feedback = NULL;
+    pInfo->conf_idev = dev;
+    pInfo->close_proc = NULL;
+
+    if (NewKbdPreInit(drv, pInfo, flags) == Success)
+    {
+        pInfo->flags |= XI86_CONFIGURED;
+        return pInfo;
+    }
+
+    xf86DeleteInput(pInfo, 0);
+    return NULL;
+}
+
+static int
+NewKbdPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
+#else
+static int
+KbdPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
+#endif
+{
+    KbdDevPtr pKbd;
+    char *s;
+    const char **defaults;
+    int rc = Success;
+
+    /* Initialise the InputInfoRec. */
+    pInfo->type_name = XI_KEYBOARD;
     pInfo->device_control = KbdProc;
     /*
      * We don't specify our own read_input function. We expect
@@ -185,33 +154,37 @@ KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
      */
     pInfo->read_input = NULL;
     pInfo->control_proc = NULL;
-    pInfo->close_proc = NULL;
     pInfo->switch_mode = NULL;
-    pInfo->conversion_proc = NULL;
-    pInfo->reverse_conversion_proc = NULL;
     pInfo->fd = -1;
     pInfo->dev = NULL;
-    pInfo->private_flags = 0;
-    pInfo->always_core_feedback = NULL;
-    pInfo->conf_idev = dev;
 
     if (!xf86IsPc98())
-        xf86CollectInputOptions(pInfo, kbdDefaults, NULL);
+        defaults = kbdDefaults;
     else
-        xf86CollectInputOptions(pInfo, kbd98Defaults, NULL);
+        defaults = kbd98Defaults;
+    xf86CollectInputOptions(pInfo, defaults
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+            , NULL
+#endif
+            );
     xf86ProcessCommonOptions(pInfo, pInfo->options); 
 
-    if (!(pKbd = xcalloc(sizeof(KbdDevRec), 1)))
-        return pInfo;
+    if (!(pKbd = calloc(sizeof(KbdDevRec), 1))) {
+        rc = BadAlloc;
+        goto out;
+    }
 
     pInfo->private = pKbd;
     pKbd->PostEvent = PostKbdEvent;
 
-    if (!xf86OSKbdPreInit(pInfo))
-        return pInfo;
+    if (!xf86OSKbdPreInit(pInfo)) {
+        rc = BadAlloc;
+        goto out;
+    }
 
     if (!pKbd->OpenKeyboard(pInfo)) {
-        return pInfo;
+        rc = BadMatch;
+        goto out;
     }
 
     if ((s = xf86SetStrOption(pInfo->options, "XLeds", NULL))) {
@@ -227,29 +200,20 @@ KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     	    }
     	    l = strtok(NULL, " \t\n");
         }
-        xfree(s);
+        free(s);
     }
 
-    SetXkbOption(pInfo, "XkbRules", &xkb_rules);
-    SetXkbOption(pInfo, "XkbModel", &xkb_model);
-    SetXkbOption(pInfo, "XkbLayout", &xkb_layout);
-    SetXkbOption(pInfo, "XkbVariant", &xkb_variant);
-    SetXkbOption(pInfo, "XkbOptions", &xkb_options);
+    xkb_rules = xf86SetStrOption(pInfo->options, "XkbRules", NULL);
+    xkb_model = xf86SetStrOption(pInfo->options, "XkbModel", NULL);
+    xkb_layout = xf86SetStrOption(pInfo->options, "XkbLayout", NULL);
+    xkb_variant = xf86SetStrOption(pInfo->options, "XkbVariant", NULL);
+    xkb_options = xf86SetStrOption(pInfo->options, "XkbOptions", NULL);
 
-  pKbd->CustomKeycodes = FALSE;
-  from = X_DEFAULT; 
-  if (xf86FindOption(pInfo->options, "CustomKeycodes")) {
-      pKbd->CustomKeycodes = xf86SetBoolOption(pInfo->options, "CustomKeycodes",
-                                               pKbd->CustomKeycodes);
-     from = X_CONFIG;
-  }
+    pKbd->CustomKeycodes = xf86SetBoolOption(pInfo->options, "CustomKeycodes",
+                                             FALSE);
 
-  xf86Msg(from, "%s: CustomKeycodes %s\n",
-               pInfo->name, pKbd->CustomKeycodes ? "enabled" : "disabled");
-
-  pInfo->flags |= XI86_CONFIGURED;
-
-  return pInfo;
+out:
+  return rc;
 }
 
 static void
@@ -312,51 +276,7 @@ KbdCtrl( DeviceIntPtr device, KeybdCtrl *ctrl)
 static void
 InitKBD(InputInfoPtr pInfo, Bool init)
 {
-  xEvent          kevent;
   KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 1
-  DeviceIntPtr    pKeyboard = pInfo->dev;
-  KeyClassRec     *keyc = pKeyboard->key;
-  KeySym          *map = keyc->curKeySyms.map;
-  unsigned int    i;
-#endif
-
-  kevent.u.keyButtonPointer.time = GetTimeInMillis();
-  kevent.u.keyButtonPointer.rootX = 0;
-  kevent.u.keyButtonPointer.rootY = 0;
-
-/* The server does this for us with i-h. */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 1
-  /*
-   * Hmm... here is the biggest hack of every time !
-   * It may be possible that a switch-vt procedure has finished BEFORE
-   * you released all keys neccessary to do this. That peculiar behavior
-   * can fool the X-server pretty much, cause it assumes that some keys
-   * were not released. TWM may stuck alsmost completly....
-   * OK, what we are doing here is after returning from the vt-switch
-   * exeplicitely unrelease all keyboard keys before the input-devices
-   * are reenabled.
-   */
-  for (i = keyc->curKeySyms.minKeyCode, map = keyc->curKeySyms.map;
-       i < keyc->curKeySyms.maxKeyCode;
-       i++, map += keyc->curKeySyms.mapWidth)
-     if (KeyPressed(i))
-      {
-        switch (*map) {
-        /* Don't release the lock keys */
-        case XK_Caps_Lock:
-        case XK_Shift_Lock:
-        case XK_Num_Lock:
-        case XK_Scroll_Lock:
-        case XK_Kana_Lock:
-          break;
-        default:
-          kevent.u.u.detail = i;
-          kevent.u.u.type = KeyRelease;
-          (* pKeyboard->public.processInputProc)(&kevent, pKeyboard, 1);
-        }
-      }
-#endif
 
   pKbd->scanPrefix      = 0;
 
@@ -481,10 +401,6 @@ PostKbdEvent(InputInfoPtr pInfo, unsigned int scanCode, Bool down)
   ErrorF("kbd driver rec scancode: 0x02%x %s\n", scanCode, down?"down":"up");
 #endif
 	  
-  /* Disable any keyboard processing while in suspend */
-  if (xf86inSuspend)
-      return;
-
   /*
    * First do some special scancode remapping ...
    */

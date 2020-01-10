@@ -4,8 +4,8 @@
 
 Summary:    Xorg X11 keyboard input driver
 Name:       xorg-x11-drv-keyboard
-Version:    1.4.0
-Release:    3%{?dist}
+Version:    1.6.0
+Release:    1%{?dist}
 URL:        http://www.x.org
 License:    MIT
 Group:      User Interface/X Hardware Support
@@ -16,11 +16,11 @@ Source0:    ftp://ftp.x.org/pub/individual/driver/%{tarball}-%{version}.tar.bz2
 ExcludeArch: s390 s390x
 
 BuildRequires: autoconf automake libtool
-BuildRequires: xorg-x11-server-sdk >= 1.5.99.1
-BuildRequires: xorg-x11-util-macros >= 1.3.0
+BuildRequires: xorg-x11-server-sdk >= 1.10.0-1
+BuildRequires: xorg-x11-util-macros >= 1.8.0
 
-Requires:  xorg-x11-server-Xorg >= 1.5.99.1
-Requires:  xkeyboard-config >= 1.2-2
+Requires:  Xorg %(xserver-sdk-abi-requires ansic)
+Requires:  Xorg %(xserver-sdk-abi-requires xinput)
 
 %description
 X.Org X11 keyboard input driver.
@@ -29,7 +29,7 @@ X.Org X11 keyboard input driver.
 %setup -q -n %{tarball}-%{version}
 
 %build
-autoreconf -v --install || exit 1
+autoreconf -v --force --install || exit 1
 %configure --disable-static
 make
 
@@ -51,6 +51,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man4/kbd.4*
 
 %changelog
+* Tue Jun 28 2011 Peter Hutterer <peter.hutterer@redhat.com> 1.6.0-1
+- keyboard 1.6.0 (#713807)
+
 * Wed Jan 06 2010 Peter Hutterer <peter.hutterer@redhat.com> 1.4.0-3
 - Use global instead of define as per Packaging Guidelines
 - Fix tab/space mixup.

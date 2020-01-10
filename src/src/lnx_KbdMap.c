@@ -1,5 +1,3 @@
-/* $XFree86$ */
-
 /*
  * Slightly modified xf86KbdLnx.c which is
  *
@@ -10,6 +8,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include <X11/X.h>
 #include <X11/Xmd.h>
 #include "input.h"
@@ -40,9 +39,7 @@ static void readKernelMapping(InputInfoPtr pInfo,
 void
 KbdGetMapping (InputInfoPtr pInfo, KeySymsPtr pKeySyms, CARD8 *pModMap)
 {
-  KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
   KeySym        *k;
-  char          type;
   int           i;
 
   readKernelMapping(pInfo, pKeySyms, pModMap);
@@ -98,8 +95,6 @@ KbdGetMapping (InputInfoPtr pInfo, KeySymsPtr pKeySyms, CARD8 *pModMap)
       break;
 
     }
-  
-  pKbd->kbdType = ioctl(pInfo->fd, KDGKBTYPE, &type) != -1 ? type : KB_101;
 
   pKeySyms->map        = map;
   pKeySyms->mapWidth   = GLYPHS_PER_KEY;
@@ -523,12 +518,12 @@ readKernelMapping(InputInfoPtr pInfo, KeySymsPtr pKeySyms, CARD8 *pModMap)
   /*
    * Find the Mapping for the special server functions
    */
-  pKbd->specialMap = (TransMapPtr) xcalloc(NUM_CUSTOMKEYS, 1);
+  pKbd->specialMap = (TransMapPtr) calloc(NUM_CUSTOMKEYS, 1);
   if (pKbd->specialMap != NULL) {
       pKbd->specialMap->end = NUM_CUSTOMKEYS;
-      pKbd->specialMap->map = (unsigned char*) xcalloc(NUM_CUSTOMKEYS, 1);
+      pKbd->specialMap->map = (unsigned char*) calloc(NUM_CUSTOMKEYS, 1);
       if (pKbd->specialMap == NULL) {
-      	  xfree(pKbd->specialMap);
+	  free(pKbd->specialMap);
       	  pKbd->specialMap = NULL;
       }
   }
