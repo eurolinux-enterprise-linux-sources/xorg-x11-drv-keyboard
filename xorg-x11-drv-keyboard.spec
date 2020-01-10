@@ -2,23 +2,34 @@
 %global moduledir %(pkg-config xorg-server --variable=moduledir )
 %global driverdir %{moduledir}/input
 
+#global gitdate 20101201
+
 Summary:    Xorg X11 keyboard input driver
 Name:       xorg-x11-drv-keyboard
-Version:    1.6.0
-Release:    1%{?dist}
+Version:    1.6.2
+Release:    7%{?gitdate:.%{gitdate}}%{?dist}
 URL:        http://www.x.org
 License:    MIT
 Group:      User Interface/X Hardware Support
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-Source0:    ftp://ftp.x.org/pub/individual/driver/%{tarball}-%{version}.tar.bz2
+%if 0%{?gitdate}
+Source0:   %{tarball}-%{gitdate}.tar.bz2
+Source1:   make-git-snapshot.sh
+Source2:   commitid
+%else
+Source0:   ftp://ftp.x.org/pub/individual/driver/%{tarball}-%{version}.tar.bz2
+%endif
+
+Patch01:   keyboard-1.6.2-0001-Use-sigsafe-logging-for-keyboard-debug-messages.patch
 
 ExcludeArch: s390 s390x
 
 BuildRequires: autoconf automake libtool
-BuildRequires: xorg-x11-server-sdk >= 1.10.0-1
-BuildRequires: xorg-x11-util-macros >= 1.8.0
+BuildRequires: xorg-x11-server-sdk >= 1.10.99.902
+BuildRequires: xorg-x11-util-macros >= 1.17
 
+Requires:  xkeyboard-config >= 1.2-2
 Requires:  Xorg %(xserver-sdk-abi-requires ansic)
 Requires:  Xorg %(xserver-sdk-abi-requires xinput)
 
@@ -26,12 +37,13 @@ Requires:  Xorg %(xserver-sdk-abi-requires xinput)
 X.Org X11 keyboard input driver.
 
 %prep
-%setup -q -n %{tarball}-%{version}
+%setup -q -n %{tarball}-%{?gitdate:%{gitdate}}%{!?gitdate:%{version}}
+%patch01 -p1
 
 %build
-autoreconf -v --force --install || exit 1
-%configure --disable-static
-make
+autoreconf --force -v --install || exit 1
+%configure --disable-static --disable-silent-rules
+make %{?_smp_mflags}
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -51,6 +63,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man4/kbd.4*
 
 %changelog
+* Thu Nov 01 2012 Peter Hutterer <peter.hutterer@redhat.com> - 1.6.2-7
+- Fix {?dist} tag (#871449)
+
+* Mon Aug 27 2012 Peter Hutterer <peter.hutterer@redhat.com> 1.6.2-6
+- Rebuild for server 1.13 (#835237)
+
+* Mon Jul 30 2012 Peter Hutterer <peter.hutterer@redhat.com> 1.6.2-4
+- Merge from F18 (#835237)
+
 * Tue Jun 28 2011 Peter Hutterer <peter.hutterer@redhat.com> 1.6.0-1
 - keyboard 1.6.0 (#713807)
 
