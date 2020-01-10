@@ -6,12 +6,11 @@
 
 Summary:    Xorg X11 keyboard input driver
 Name:       xorg-x11-drv-keyboard
-Version:    1.8.0
+Version:    1.8.1
 Release:    1%{?gitdate:.%{gitdate}}%{?dist}
 URL:        http://www.x.org
 License:    MIT
 Group:      User Interface/X Hardware Support
-BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %if 0%{?gitdate}
 Source0:   %{tarball}-%{gitdate}.tar.bz2
@@ -24,12 +23,12 @@ Source0:   ftp://ftp.x.org/pub/individual/driver/%{tarball}-%{version}.tar.bz2
 ExcludeArch: s390 s390x
 
 BuildRequires: autoconf automake libtool
-BuildRequires: xorg-x11-server-sdk >= 1.10.99.902
-BuildRequires: xorg-x11-util-macros >= 1.17
+BuildRequires: xorg-x11-server-devel >= 1.10.99.902
+BuildRequires: xorg-x11-util-macros >= 1.3.0
 
 Requires:  xkeyboard-config >= 1.2-2
-Requires:  Xorg %(xserver-sdk-abi-requires ansic)
-Requires:  Xorg %(xserver-sdk-abi-requires xinput)
+Requires: Xorg %(xserver-sdk-abi-requires ansic)
+Requires: Xorg %(xserver-sdk-abi-requires xinput)
 
 %description
 X.Org X11 keyboard input driver.
@@ -60,26 +59,122 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man4/kbd.4*
 
 %changelog
-* Wed Apr 23 2014 Adam Jackson <ajax@redhat.com> 1.8.0-1
-- keyboard 1.8.0
+* Mon Apr 20 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.8.1-1
+- xf86-input-keyboard 1.8.1 (#1194877)
 
-* Thu Nov 01 2012 Peter Hutterer <peter.hutterer@redhat.com> - 1.6.2-7
-- Fix {?dist} tag (#871449)
+* Wed Aug 20 2014 Adam Jackson <ajax@redhat.com> 1.8.0-5
+- Build on PPC
 
-* Mon Aug 27 2012 Peter Hutterer <peter.hutterer@redhat.com> 1.6.2-6
-- Rebuild for server 1.13 (#835237)
+* Wed Jan 15 2014 Adam Jackson <ajax@redhat.com> - 1.8.0-4
+- 1.15 ABI rebuild
 
-* Mon Jul 30 2012 Peter Hutterer <peter.hutterer@redhat.com> 1.6.2-4
-- Merge from F18 (#835237)
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 1.8.0-3
+- Mass rebuild 2013-12-27
 
-* Tue Jun 28 2011 Peter Hutterer <peter.hutterer@redhat.com> 1.6.0-1
-- keyboard 1.6.0 (#713807)
+* Wed Nov 06 2013 Adam Jackson <ajax@redhat.com> - 1.8.0-2
+- 1.15RC1 ABI rebuild
 
-* Wed Jan 06 2010 Peter Hutterer <peter.hutterer@redhat.com> 1.4.0-3
-- Use global instead of define as per Packaging Guidelines
-- Fix tab/space mixup.
-- Remove obsolete (and commented-out) keyboard_drv files.
-- Remove traces from building from git
+* Fri Nov 01 2013 Peter Hutterer <peter.hutterer@redhat.com> 1.8.0-1
+- xf86-input-keyboard 1.8.0
+
+* Fri Oct 25 2013 Adam Jackson <ajax@redhat.com> - 1.7.0-3
+- ABI rebuild
+
+* Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.7.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+
+* Wed Mar 27 2013 Peter Hutterer <peter.hutterer@redhat.com> 1.7.0-1
+- keyboard 1.7.0
+
+* Thu Mar 07 2013 Peter Hutterer <peter.hutterer@redhat.com> - 1.6.2-8
+- require xorg-x11-server-devel, not -sdk
+
+* Thu Mar 07 2013 Peter Hutterer <peter.hutterer@redhat.com> - 1.6.2-7
+- ABI rebuild
+
+* Fri Feb 15 2013 Peter Hutterer <peter.hutterer@redhat.com> - 1.6.2-6
+- ABI rebuild
+
+* Fri Feb 15 2013 Peter Hutterer <peter.hutterer@redhat.com> - 1.6.2-5
+- ABI rebuild
+
+* Thu Jan 10 2013 Adam Jackson <ajax@redhat.com> - 1.6.2-4
+- ABI rebuild
+
+* Wed Oct 31 2012 Peter Hutterer <peter.hutterer@redhat.com> - 1.6.2-3
+- Fix {?dist} tag
+
+* Thu Aug 02 2012 Peter Hutterer <peter.hutterer@redhat.com> 1.6.2-2
+- Force autoreconf to avoid libtool versioning errors
+
+* Tue Jul 24 2012 Peter Hutterer <peter.hutterer@redhat.com> 1.6.2-1
+- keyboard 1.6.2
+
+* Sun Jul 22 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.6.1-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
+
+* Wed Jul 18 2012 Dave Airlie <airlied@redhat.com> - 1.6.1-6
+- ABI rebuild
+
+* Thu Apr 05 2012 Adam Jackson <ajax@redhat.com> - 1.6.1-5
+- RHEL arch exclude updates
+
+* Sat Feb 11 2012 Peter Hutterer <peter.hutterer@redhat.com> - 1.6.1-4
+- ABI rebuild
+
+* Fri Feb 10 2012 Peter Hutterer <peter.hutterer@redhat.com> - 1.6.1-3
+- ABI rebuild
+
+* Tue Jan 24 2012 Peter Hutterer <peter.hutterer@redhat.com> - 1.6.1-2
+- ABI rebuild
+
+* Wed Jan 04 2012 Peter Hutterer <peter.hutterer@redhat.com> 1.6.1-1
+- keyboard 1.6.1
+
+* Mon Nov 14 2011 Adam Jackson <ajax@redhat.com> - 1.6.0-4
+- ABI rebuild
+
+* Wed Nov 09 2011 ajax <ajax@redhat.com> - 1.6.0-3
+- ABI rebuild
+
+* Thu Aug 18 2011 Adam Jackson <ajax@redhat.com> - 1.6.0-2
+- Rebuild for xserver 1.11 ABI
+
+* Thu Jul 07 2011 Peter Hutterer <peter.hutterer@redhat.com>
+- Disable silent rules on build, build with _smp_mflags
+
+* Tue Mar 08 2011 Peter Hutterer <peter.hutterer@redhat.com> 1.6.0-1
+- keyboard 1.6.0
+
+* Mon Feb 21 2011 Peter Hutterer <peter.hutterer@redhat.com> 1.5.99.901-1
+- xf86-input-keyboard 1.6RC1
+
+* Tue Feb 08 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.5.0-4.20101201
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+
+* Wed Dec 01 2010 Peter Hutterer <peter.hutterer@redhat.com> - 1.5.0-3.20101201
+- Rebuild for server 1.10
+
+* Wed Dec 01 2010 Peter Hutterer <peter.hutterer@redhat.com> 1.5.0-2.20101201
+- Add git hooks
+- Update to today's git snapshot
+
+* Mon Nov 01 2010 Peter Hutterer <peter.hutterer@redhat.com> 1.5.0-1
+- keyboard 1.5.0
+
+* Wed Oct 27 2010 Adam Jackson <ajax@redhat.com> 1.4.0-6
+- Add ABI requires magic (#542742)
+
+* Mon Jul 05 2010 Peter Hutterer <peter.hutterer@redhat.com> - 1.4.0-5
+- rebuild for X Server 1.9
+
+* Thu Jan 21 2010 Peter Hutterer <peter.hutterer@redhat.com> - 1.4.0-4
+- Rebuild for server 1.8
+
+* Thu Jan 07 2010 Peter Hutterer <peter.hutterer@redhat.com> 1.4.0-3
+- Use global instead of define as per Packaging Guidelines.
+- Fix tab/spaces mixup.
+- Remove unused files from old keyboard driver.
 
 * Fri Nov 20 2009 Peter Hutterer <peter.hutterer@redhat.com> 1.4.0-2
 - BuildRequires xorg-x11-util-macros 1.3.0
