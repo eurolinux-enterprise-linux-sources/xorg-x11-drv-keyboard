@@ -6,8 +6,8 @@
 
 Summary:    Xorg X11 keyboard input driver
 Name:       xorg-x11-drv-keyboard
-Version:    1.6.2
-Release:    7%{?gitdate:.%{gitdate}}%{?dist}
+Version:    1.8.0
+Release:    1%{?gitdate:.%{gitdate}}%{?dist}
 URL:        http://www.x.org
 License:    MIT
 Group:      User Interface/X Hardware Support
@@ -20,8 +20,6 @@ Source2:   commitid
 %else
 Source0:   ftp://ftp.x.org/pub/individual/driver/%{tarball}-%{version}.tar.bz2
 %endif
-
-Patch01:   keyboard-1.6.2-0001-Use-sigsafe-logging-for-keyboard-debug-messages.patch
 
 ExcludeArch: s390 s390x
 
@@ -38,7 +36,6 @@ X.Org X11 keyboard input driver.
 
 %prep
 %setup -q -n %{tarball}-%{?gitdate:%{gitdate}}%{!?gitdate:%{version}}
-%patch01 -p1
 
 %build
 autoreconf --force -v --install || exit 1
@@ -63,6 +60,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man4/kbd.4*
 
 %changelog
+* Wed Apr 23 2014 Adam Jackson <ajax@redhat.com> 1.8.0-1
+- keyboard 1.8.0
+
 * Thu Nov 01 2012 Peter Hutterer <peter.hutterer@redhat.com> - 1.6.2-7
 - Fix {?dist} tag (#871449)
 
