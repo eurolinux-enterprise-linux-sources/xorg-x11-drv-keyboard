@@ -6,7 +6,7 @@
 
 Summary:    Xorg X11 keyboard input driver
 Name:       xorg-x11-drv-keyboard
-Version:    1.8.1
+Version:    1.9.0
 Release:    1%{?gitdate:.%{gitdate}}%{?dist}
 URL:        http://www.x.org
 License:    MIT
@@ -59,6 +59,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man4/kbd.4*
 
 %changelog
+* Fri Jan 27 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.0-1
+- xf86-input-keyboard 1.9.0 (#1401649)
+
 * Mon Apr 20 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.8.1-1
 - xf86-input-keyboard 1.8.1 (#1194877)
 
