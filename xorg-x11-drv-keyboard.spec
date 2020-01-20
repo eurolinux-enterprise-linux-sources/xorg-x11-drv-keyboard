@@ -7,7 +7,7 @@
 Summary:    Xorg X11 keyboard input driver
 Name:       xorg-x11-drv-keyboard
 Version:    1.8.0
-Release:    2%{?gitdate:.%{gitdate}}%{?dist}
+Release:    4%{?gitdate:.%{gitdate}}%{?dist}
 URL:        http://www.x.org
 License:    MIT
 Group:      User Interface/X Hardware Support
@@ -59,6 +59,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man4/kbd.4*
 
 %changelog
+* Wed Jan 15 2014 Adam Jackson <ajax@redhat.com> - 1.8.0-4
+- 1.15 ABI rebuild
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 1.8.0-3
+- Mass rebuild 2013-12-27
+
 * Wed Nov 06 2013 Adam Jackson <ajax@redhat.com> - 1.8.0-2
 - 1.15RC1 ABI rebuild
 
