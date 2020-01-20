@@ -6,8 +6,8 @@
 
 Summary:    Xorg X11 keyboard input driver
 Name:       xorg-x11-drv-keyboard
-Version:    1.8.0
-Release:    2%{?gitdate:.%{gitdate}}%{?dist}
+Version:    1.8.1
+Release:    1%{?gitdate:.%{gitdate}}%{?dist}
 URL:        http://www.x.org
 License:    MIT
 Group:      User Interface/X Hardware Support
@@ -20,7 +20,7 @@ Source2:   commitid
 Source0:   ftp://ftp.x.org/pub/individual/driver/%{tarball}-%{version}.tar.bz2
 %endif
 
-ExcludeArch: s390 s390x %{?rhel:ppc ppc64}
+ExcludeArch: s390 s390x
 
 BuildRequires: autoconf automake libtool
 BuildRequires: xorg-x11-server-devel >= 1.10.99.902
@@ -59,6 +59,18 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man4/kbd.4*
 
 %changelog
+* Mon Apr 20 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.8.1-1
+- xf86-input-keyboard 1.8.1 (#1194877)
+
+* Wed Aug 20 2014 Adam Jackson <ajax@redhat.com> 1.8.0-5
+- Build on PPC
+
+* Wed Jan 15 2014 Adam Jackson <ajax@redhat.com> - 1.8.0-4
+- 1.15 ABI rebuild
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 1.8.0-3
+- Mass rebuild 2013-12-27
+
 * Wed Nov 06 2013 Adam Jackson <ajax@redhat.com> - 1.8.0-2
 - 1.15RC1 ABI rebuild
 
